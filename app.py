@@ -86,8 +86,8 @@ default_chargeType_perGLN = {
 elafgift = 0.761
 
 #https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/
-nettarif = 0.074
-systemtarif = 0.051
+energinet_nettarif = 0.074
+energinet_systemtarif = 0.051
 
 moms = 1.25 #percentage
 
@@ -104,6 +104,27 @@ def elpris():
 
     spotprices = get_spotprices(startDate, priceArea)
     tariffs = get_tariffs_for_date(startDate, gln_Number, chargeTypeCode)
+
+
+    prices = []
+    for (p, hour) in zip(spotprices['records'], range(1, 25)):
+        pout = {
+            'HourDK': p['HourDK'],
+            'HourUTC': p['HourUTC'],
+            'SpotPrice': p['SpotPriceDKK'] / 1000.0, # MWh to KWh
+
+            'ElAfgift': elafgift,
+            'EnergiNetNetTarif': energinet_nettarif,
+            'EnergiNetSystemTarif': energinet_systemtarif,
+
+            'NetTarif': tariffs['Price%d' % hour]
+        }
+        pout['TotalExMoms'] = pout['SpotPrice'] + pout['ElAfgift'] + \
+                pout['EnergiNetNetTarif'] + pout['EnergiNetSystemTarif'] + \
+                pout['NetTarif']
+        pout['Moms'] = pout['TotalExMoms'] * 0.25
+        pout['Total'] = pout['TotalExMoms'] + pout['Moms']
+        prices.append(pout)
 
     
 
