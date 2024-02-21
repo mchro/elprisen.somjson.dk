@@ -107,7 +107,7 @@ def elpris():
 
 
     prices = []
-    for (p, hour) in zip(spotprices['records'], range(1, 25)):
+    for (p, hour) in zip(spotprices['records'], range(len(spotprices['records']))):
         pout = {
             'HourDK': p['HourDK'],
             'HourUTC': p['HourUTC'],
@@ -117,11 +117,11 @@ def elpris():
             'EnergiNetNetTarif': energinet_nettarif,
             'EnergiNetSystemTarif': energinet_systemtarif,
 
-            'NetTarif': tariffs['Price%d' % hour]
+            'NetselskabTarif': tariffs['Price%d' % (hour % 24 + 1)]
         }
         pout['TotalExMoms'] = pout['SpotPrice'] + pout['ElAfgift'] + \
                 pout['EnergiNetNetTarif'] + pout['EnergiNetSystemTarif'] + \
-                pout['NetTarif']
+                pout['NetselskabTarif']
         pout['Moms'] = pout['TotalExMoms'] * 0.25
         pout['Total'] = pout['TotalExMoms'] + pout['Moms']
         prices.append(pout)
