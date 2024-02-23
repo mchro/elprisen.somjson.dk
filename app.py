@@ -4,13 +4,14 @@ from flask_limiter.util import get_remote_address
 from flask_caching import Cache
 import requests
 from datetime import datetime
+from dataclasses import dataclass
 
 
 
 app = Flask(__name__)
 
 # Configure Flask-Caching
-app.config['CACHE_TYPE'] = 'simple'  # You can choose a different caching type based on your needs
+app.config['CACHE_TYPE'] = 'simple'
 cache = Cache(app)
 
 # Configure Flask-Limiter
@@ -58,30 +59,49 @@ def get_tariffs_for_date(start, gln_Number, chargeTypeCode):
     for t in tariffs:
         t['ValidFrom'] = datetime.fromisoformat(t['ValidFrom'])
         t['ValidTo'] = t['ValidTo'] and datetime.fromisoformat(t['ValidTo']) or None
+        #XXX seems buggy if t['ValidTo'] is None
 
         if start >= t['ValidFrom'] and start < t['ValidTo']:
             return t
 
-    #relevant_tariff = filter(lambda x: x['ValidFrom'] , tariffs)
-    
     return None
 
 def date_from_reqparam(param):
     date_format = '%Y-%m-%d'
     return datetime.strptime(param, date_format).date()
 
-companyToGLN = {
-    "N1 A/S": "5790000611003",
-    "Zeanet A/S": "5790001089375",
-    "NOE Net A/S": "5790000395620",
+@dataclass
+class GridCompany:
+    name: str
+    gln_Number: str
+    chargeTypeCode: str
+    gridCompanyNumber: str
 
-}
-
-default_chargeType_perGLN = {
-    "5790000611003": "T-C-F-T-TD",
-    "5790001089375": "43110",
-    "5790000395620": "30030",
-}
+#Painfully manually extracted from https://www.energidataservice.dk/tso-electricity/DatahubPricelist
+gridCompanies = [
+    GridCompany("N1 A/S", "5790000611003", "T-C-F-T-TD", "344"),
+    GridCompany("Zeanet A/S", "5790001089375", "43110", "860"),
+    GridCompany("NOE Net A/S", "5790000395620", "30030", "347"),
+    GridCompany("Radius Elnet A/S", "5790000705689", "DT_C_01", "791"),
+    GridCompany("Netselskabet Elværk A/S - 331", "5790000681358", "5NCFF", "331"),
+    GridCompany("TREFOR El-Net Øst A/S", "5790000706686", "46", "911"),
+    GridCompany("Sunds Net A.m.b.a", "5790001095444", "SEF-NT-05", "396"),
+    GridCompany("Elnet Midt A/S", "5790001100520", "T3001", "154"),
+    GridCompany("Vores Elnet A/S", "5790000610976", "TNT1011", ""),
+    GridCompany("Netselskabet Elværk A/S - 042", "5790000681075", "0NCFF", "042"),
+    GridCompany("NKE-Elnet A/S", "5790001088231", "94TR_C_ET", "854"),
+    GridCompany("Hurup Elværk Net A/S", "5790000610839", "HEV-NT-01T", "381"),
+    GridCompany("Elektrus A/S", "5790000836239", "6000091", "757"),
+    GridCompany("Aal El-Net A M B A", "5790001095451", "AAL-NT-05", "370"),
+    GridCompany("Nord Energi Net A/S", "5790000610877", "TAC", "031"),
+    GridCompany("RAH Net A/S", "5790000681327", "RAH-C", "348"),
+    GridCompany("Videbæk Elnet A/S", "5790000610822", "VE-ON-11", "385"), #maybe also need to add "VE-NT-01"
+    GridCompany("Ravdex A/S", "5790000836727", "NT-C", "531"),
+    GridCompany("Midtfyns Elforsyning A.m.b.A", "5790001089023", "TNT15000", "584"),
+    GridCompany("FLOW Elnet A/S", "5790000392551", "FE2 NT-01", "533"),
+    GridCompany("Veksel A/S", "5790001088217", "NT-10", "532"),
+    GridCompany("TREFOR El-net A/S", "5790000392261", "C", "244"),
+]
 
 elafgift = 0.761
 
@@ -92,15 +112,19 @@ energinet_systemtarif = 0.051
 moms = 1.25 #percentage
 
 
+#TODO: support address lookup by https://api.elnet.greenpowerdenmark.dk/api/supplierlookup/Ringstedgade%2066,%204000%20Roskilde
+
 
 @app.route('/elpris')
 def elpris():
     startDate = request.args.get('start', datetime.now().date(), type=date_from_reqparam)
     priceArea = request.args.get('PriceArea', 'DK1')
     gln_Number = request.args.get('GLN_Number', '5790000611003')
+    gridCompany = next((c for c in gridCompanies if c.gln_Number == gln_Number), None)
+
     chargeTypeCode = request.args.get('ChargeTypeCode')
     if not chargeTypeCode:
-        chargeTypeCode = default_chargeType_perGLN[gln_Number]
+        chargeTypeCode = gridCompany.chargeTypeCode
 
     spotprices = get_spotprices(startDate, priceArea)
     tariffs = get_tariffs_for_date(startDate, gln_Number, chargeTypeCode)
@@ -127,7 +151,6 @@ def elpris():
         prices.append(pout)
 
     
-
     return jsonify(locals())
 
 if __name__ == '__main__':

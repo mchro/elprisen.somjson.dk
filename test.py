@@ -19,9 +19,13 @@ class TestApp(unittest.TestCase):
         self.assertEqual(hour0['SpotPriceDKK'], 68.800003)
 
     def test_get_tariffs(self):
+        gridCompany = app.gridCompanies[0]
+        self.assertEqual(gridCompany.name, "N1 A/S")
+        self.assertEqual(gridCompany.gridCompanyNumber, "344")
+
         startDate = app.date_from_reqparam("2024-02-23")
-        gln_Number = '5790000611003'
-        chargeTypeCode = app.default_chargeType_perGLN[gln_Number]
+        gln_Number = gridCompany.gln_Number
+        chargeTypeCode = gridCompany.chargeTypeCode
 
         tariffs = app.get_tariffs_for_date(startDate, gln_Number, chargeTypeCode)
 
