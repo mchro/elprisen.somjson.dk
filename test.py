@@ -7,7 +7,7 @@ import app
 class TestApp(unittest.TestCase):
     def setUp(self):
         # Set up a test client
-        self.client = app.app.test_client()
+        self.app = app.app.test_client()
 
     def test_spotprices(self):
         startDate = app.date_from_reqparam("2024-02-23")
@@ -58,6 +58,32 @@ class TestApp(unittest.TestCase):
         self.assertEqual(tariffs['Price22'], 0.3303)
         self.assertEqual(tariffs['Price23'], 0.3303)
         self.assertEqual(tariffs['Price24'], 0.3303)
+
+    def test_get_info_for_address1(self):
+        address = "Ringstedgade 66, 4000 Roskilde"
+        info = app.get_info_for_address(address)
+
+        self.assertEqual(info['name'], 'Cerius A/S')
+        self.assertEqual(info['def'], '740')
+
+    def test_get_info_for_address2(self):
+        address = "Sofiendalsvej 80, 9200 Aalborg"
+        info = app.get_info_for_address(address)
+
+        self.assertEqual(info['name'], 'N1 A/S')
+        self.assertEqual(info['def'], '344')
+
+    def test_mainroute(self):
+        response = self.app.get('/elpris?startDate=2024-02-23')
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_addressroute1(self):
+        response = self.app.get('/adresse/Sofiendalsvej 80, 9200 Aalborg')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.location, 'http://localhost/elpris?GLN_Number=5790000611003')
+
 
 if __name__ == '__main__':
     unittest.main()

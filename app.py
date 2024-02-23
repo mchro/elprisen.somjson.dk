@@ -116,15 +116,40 @@ moms = 1.25 #percentage
 
 #TODO: support address lookup by https://api.elnet.greenpowerdenmark.dk/api/supplierlookup/Ringstedgade%2066,%204000%20Roskilde
 
+@cache.memoize(timeout=60*60)
+def get_info_for_address(address):
+    response = requests.get('https://api.elnet.greenpowerdenmark.dk/api/supplierlookup/' + address)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
+
+@app.route('/adresse/<address>')
+def adresse(address):
+    if len(address) > 100:
+        abort(400, 'Address too long')
+
+    info = get_info_for_address(address)
+    if not info:
+        abort(400, 'Address not found in lookup API')
+
+    gridCompanyNumber = info['def']
+    gridCompany = next((c for c in gridCompanies if c.gridCompanyNumber == gridCompanyNumber), None)
+    if not gridCompany:
+        print(f'Gridcompany not found for number {gridCompanyNumber}')
+        abort(500, f'Gridcompany not found for number {gridCompanyNumber}')
+
+    return redirect(url_for('elpris') + "?GLN_Number=" + gridCompany.gln_Number)
 
 @app.route('/elpris')
 def elpris():
     startDate = request.args.get('start', datetime.now().date(), type=date_from_reqparam)
-    priceArea = request.args.get('PriceArea', 'DK1')
     gln_Number = request.args.get('GLN_Number', '5790000611003')
     gridCompany = next((c for c in gridCompanies if c.gln_Number == gln_Number), None)
 
-    chargeTypeCode = request.args.get('ChargeTypeCode')
+    priceArea = request.args.get('PriceArea', gridCompany.priceArea)
+    chargeTypeCode = request.args.get('ChargeTypeCode', gridCompany.chargeTypeCode)
     if not chargeTypeCode:
         chargeTypeCode = gridCompany.chargeTypeCode
 
@@ -153,7 +178,10 @@ def elpris():
         prices.append(pout)
 
     
-    return jsonify(locals())
+    return jsonify({
+        'gridCompany': gridCompany,
+        'prices': prices
+        })
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)
