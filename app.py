@@ -5,8 +5,7 @@ from flask_caching import Cache
 import requests
 from datetime import datetime
 from dataclasses import dataclass
-
-
+from typing import Optional
 
 app = Flask(__name__)
 
@@ -76,31 +75,32 @@ class GridCompany:
     gln_Number: str
     chargeTypeCode: str
     gridCompanyNumber: str
+    priceArea: Optional[str] = "DK1"
 
 #Painfully manually extracted from https://www.energidataservice.dk/tso-electricity/DatahubPricelist
 gridCompanies = [
-    GridCompany("N1 A/S", "5790000611003", "T-C-F-T-TD", "344"),
-    GridCompany("Zeanet A/S", "5790001089375", "43110", "860"),
-    GridCompany("NOE Net A/S", "5790000395620", "30030", "347"),
-    GridCompany("Radius Elnet A/S", "5790000705689", "DT_C_01", "791"),
-    GridCompany("Netselskabet Elværk A/S - 331", "5790000681358", "5NCFF", "331"),
-    GridCompany("TREFOR El-Net Øst A/S", "5790000706686", "46", "911"),
-    GridCompany("Sunds Net A.m.b.a", "5790001095444", "SEF-NT-05", "396"),
-    GridCompany("Elnet Midt A/S", "5790001100520", "T3001", "154"),
-    GridCompany("Vores Elnet A/S", "5790000610976", "TNT1011", ""),
-    GridCompany("Netselskabet Elværk A/S - 042", "5790000681075", "0NCFF", "042"),
-    GridCompany("NKE-Elnet A/S", "5790001088231", "94TR_C_ET", "854"),
-    GridCompany("Hurup Elværk Net A/S", "5790000610839", "HEV-NT-01T", "381"),
-    GridCompany("Elektrus A/S", "5790000836239", "6000091", "757"),
-    GridCompany("Aal El-Net A M B A", "5790001095451", "AAL-NT-05", "370"),
-    GridCompany("Nord Energi Net A/S", "5790000610877", "TAC", "031"),
-    GridCompany("RAH Net A/S", "5790000681327", "RAH-C", "348"),
-    GridCompany("Videbæk Elnet A/S", "5790000610822", "VE-ON-11", "385"), #maybe also need to add "VE-NT-01"
-    GridCompany("Ravdex A/S", "5790000836727", "NT-C", "531"),
-    GridCompany("Midtfyns Elforsyning A.m.b.A", "5790001089023", "TNT15000", "584"),
-    GridCompany("FLOW Elnet A/S", "5790000392551", "FE2 NT-01", "533"),
-    GridCompany("Veksel A/S", "5790001088217", "NT-10", "532"),
-    GridCompany("TREFOR El-net A/S", "5790000392261", "C", "244"),
+    GridCompany("N1 A/S", "5790000611003", "T-C-F-T-TD", "344", "DK1"),
+    GridCompany("Zeanet A/S", "5790001089375", "43110", "860", "DK2"),
+    GridCompany("NOE Net A/S", "5790000395620", "30030", "347", "DK1"),
+    GridCompany("Radius Elnet A/S", "5790000705689", "DT_C_01", "791", "DK2"),
+    GridCompany("Netselskabet Elværk A/S - 331", "5790000681358", "5NCFF", "331", "DK1"),
+    GridCompany("TREFOR El-Net Øst A/S", "5790000706686", "46", "911", "DK2"),
+    GridCompany("Sunds Net A.m.b.a", "5790001095444", "SEF-NT-05", "396", "DK1"),
+    GridCompany("Elnet Midt A/S", "5790001100520", "T3001", "154", "DK1"),
+    GridCompany("Vores Elnet A/S", "5790000610976", "TNT1011", "543", "DK1"),
+    GridCompany("Netselskabet Elværk A/S - 042", "5790000681075", "0NCFF", "042", "DK1"),
+    GridCompany("NKE-Elnet A/S", "5790001088231", "94TR_C_ET", "854", "DK2"),
+    GridCompany("Hurup Elværk Net A/S", "5790000610839", "HEV-NT-01T", "381", "DK1"),
+    GridCompany("Elektrus A/S", "5790000836239", "6000091", "757", "DK2"),
+    GridCompany("Aal El-Net A M B A", "5790001095451", "AAL-NT-05", "370", "DK1"),
+    GridCompany("Nord Energi Net A/S", "5790000610877", "TAC", "031", "DK1"),
+    GridCompany("RAH Net A/S", "5790000681327", "RAH-C", "348", "DK1"),
+    GridCompany("Videbæk Elnet A/S", "5790000610822", "VE-ON-11", "385", "DK1"), #maybe also need to add "VE-NT-01"
+    GridCompany("Ravdex A/S", "5790000836727", "NT-C", "531", "DK1"),
+    GridCompany("Midtfyns Elforsyning A.m.b.A", "5790001089023", "TNT15000", "584", "DK1"),
+    GridCompany("FLOW Elnet A/S", "5790000392551", "FE2 NT-01", "533", "DK1"),
+    GridCompany("Veksel A/S", "5790001088217", "NT-10", "532", "DK1"),
+    GridCompany("TREFOR El-net A/S", "5790000392261", "C", "244", "DK1"),
 ]
 
 elafgift = 0.761
