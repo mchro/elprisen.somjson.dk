@@ -1,6 +1,6 @@
-from flask import Flask, request, jsonify
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+from flask import Flask, request, jsonify, abort, redirect, url_for
+#from flask_limiter import Limiter
+#from flask_limiter.util import get_remote_address
 from flask_caching import Cache
 import requests
 from datetime import datetime
@@ -14,7 +14,7 @@ app.config['CACHE_TYPE'] = 'simple'
 cache = Cache(app)
 
 # Configure Flask-Limiter
-limiter = Limiter(get_remote_address, app=app)
+#limiter = Limiter(get_remote_address, app=app)
 
 
 @app.route('/')
