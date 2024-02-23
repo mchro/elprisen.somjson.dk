@@ -59,6 +59,45 @@ class TestApp(unittest.TestCase):
         self.assertEqual(tariffs['Price23'], 0.3303)
         self.assertEqual(tariffs['Price24'], 0.3303)
 
+    def test_get_tariffs_only1hour(self):
+        gridCompany = next(c for c in app.gridCompanies if c.name == 'Elinord A/S')
+
+        startDate = app.date_from_reqparam("2024-02-23")
+        gln_Number = gridCompany.gln_Number
+        chargeTypeCode = gridCompany.chargeTypeCode
+
+        tariffs = app.get_tariffs_for_date(startDate, gln_Number, chargeTypeCode)
+
+        self.assertEqual(tariffs['GLN_Number'], gln_Number)
+        self.assertEqual(tariffs['ChargeType'], 'D03')
+        self.assertEqual(tariffs['ChargeTypeCode'], chargeTypeCode)
+        self.assertEqual(tariffs['ValidFrom'], datetime.datetime(2023, 4, 1, 0, 0))
+        self.assertEqual(tariffs['ValidTo'], datetime.datetime(2024, 3, 1, 0, 0))
+        self.assertEqual(tariffs['Price1'], 0.2724)
+        self.assertEqual(tariffs['Price2'], 0.2724)
+        self.assertEqual(tariffs['Price3'], 0.2724)
+        self.assertEqual(tariffs['Price4'], 0.2724)
+        self.assertEqual(tariffs['Price5'], 0.2724)
+        self.assertEqual(tariffs['Price6'], 0.2724)
+        self.assertEqual(tariffs['Price7'], 0.2724)
+        self.assertEqual(tariffs['Price8'], 0.2724)
+        self.assertEqual(tariffs['Price9'], 0.2724)
+        self.assertEqual(tariffs['Price10'], 0.2724)
+        self.assertEqual(tariffs['Price11'], 0.2724)
+        self.assertEqual(tariffs['Price12'], 0.2724)
+        self.assertEqual(tariffs['Price13'], 0.2724)
+        self.assertEqual(tariffs['Price14'], 0.2724)
+        self.assertEqual(tariffs['Price15'], 0.2724)
+        self.assertEqual(tariffs['Price16'], 0.2724)
+        self.assertEqual(tariffs['Price17'], 0.2724)
+        self.assertEqual(tariffs['Price18'], 0.2724)
+        self.assertEqual(tariffs['Price19'], 0.2724)
+        self.assertEqual(tariffs['Price20'], 0.2724)
+        self.assertEqual(tariffs['Price21'], 0.2724)
+        self.assertEqual(tariffs['Price22'], 0.2724)
+        self.assertEqual(tariffs['Price23'], 0.2724)
+        self.assertEqual(tariffs['Price24'], 0.2724)
+
     def test_get_info_for_address1(self):
         address = "Ringstedgade 66, 4000 Roskilde"
         info = app.get_info_for_address(address)

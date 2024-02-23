@@ -61,6 +61,10 @@ def get_tariffs_for_date(start, gln_Number, chargeTypeCode):
         #XXX seems buggy if t['ValidTo'] is None
 
         if start >= t['ValidFrom'] and start < t['ValidTo']:
+            #compensate for potentially missing prices, use Price1
+            for i in range(2, 25):
+                if not t[f'Price{i}']:
+                    t[f'Price{i}'] = t['Price1']
             return t
 
     return None
@@ -103,6 +107,7 @@ gridCompanies = [
     GridCompany("Veksel A/S", "5790001088217", "NT-10", "532", "DK1"),
     GridCompany("TREFOR El-net A/S", "5790000392261", "C", "244", "DK1"),
     GridCompany("Cerius A/S", "5790000705184", "30TR_C_ET", "740", "DK2"),
+    GridCompany("Elinord A/S", "5790001095277", "43300", "051", "DK1"),
 ]
 
 elafgift = 0.761
