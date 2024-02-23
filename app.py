@@ -94,6 +94,7 @@ gridCompanies = [
     GridCompany("Elektrus A/S", "5790000836239", "6000091", "757", "DK2"),
     GridCompany("Aal El-Net A M B A", "5790001095451", "AAL-NT-05", "370", "DK1"),
     GridCompany("Nord Energi Net A/S", "5790000610877", "TAC", "031", "DK1"),
+    GridCompany("Nord Energi Net A/S", "5790000610877", "TAC", "032", "DK1"),
     GridCompany("RAH Net A/S", "5790000681327", "RAH-C", "348", "DK1"),
     GridCompany("Videbæk Elnet A/S", "5790000610822", "VE-ON-11", "385", "DK1"), #maybe also need to add "VE-NT-01"
     GridCompany("Ravdex A/S", "5790000836727", "NT-C", "531", "DK1"),
@@ -101,6 +102,7 @@ gridCompanies = [
     GridCompany("FLOW Elnet A/S", "5790000392551", "FE2 NT-01", "533", "DK1"),
     GridCompany("Veksel A/S", "5790001088217", "NT-10", "532", "DK1"),
     GridCompany("TREFOR El-net A/S", "5790000392261", "C", "244", "DK1"),
+    GridCompany("Cerius A/S", "5790000705184", "30TR_C_ET", "740", "DK2"),
 ]
 
 elafgift = 0.761
