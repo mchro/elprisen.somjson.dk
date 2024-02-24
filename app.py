@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, abort, redirect, url_for
+from flask import Flask, request, jsonify, abort, redirect, url_for, render_template, send_from_directory
 #from flask_limiter import Limiter
 #from flask_limiter.util import get_remote_address
 from flask_caching import Cache
@@ -199,6 +199,16 @@ def elpris():
         'gridCompany': gridCompany,
         'prices': prices
         })
+
+@app.route('/apidocs/')
+def swagger_ui():
+    print("hest")
+    return render_template('swagger_ui.html')
+
+@app.route('/apispec')
+def get_spec():
+    return send_from_directory(app.root_path, 'openapi.yaml')
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)

@@ -27,12 +27,12 @@ info:
 externalDocs:
   description: givmignubareelprisen.dk
   url: https://givmignubareelprisen.dk
-servers:
-  - url: https://givmignubareelprisen.dk
+#servers:
+#  - url: https://elpris.smartere.dk
 tags:
   - name: Elpriser
 paths:
-  /elpris/:
+  /elpris:
     get:
       tags:
         - Elpriser
