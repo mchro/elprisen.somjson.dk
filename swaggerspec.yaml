@@ -1,0 +1,165 @@
+openapi: 3.0.3
+info:
+  title: Giv mig nu bare elprisen.dk
+  description: >-
+    Et simpelt API der gør præcis det navnet siger: få vist elprisen (historisk, nuværende, og et døgn frem) som JSON.
+    Elprisen beregnes per time inklusiv alle kendte tariffer og afgifter:
+     1. Spot prisen fra Nordpool (varierer per time, typisk kendt for kommende døgn kl. 13.00)
+     2. Elafgift til staten (pt. 0.761 DKK / kWh)
+     3. Energinet net-tarif (pt. 0.074 DKK / kWh)
+     4. Energinet system-tarif (pt. 0.051 DKK /kWh)
+     5. Netselskab tarif (varierer per time for nogle netselskaber, se [Tarifmodel 3.0](https://greenpowerdenmark.dk/vejledning-teknik/nettariffer-priser-gebyrer/tariffer))
+     6. Moms (pt. 25%)
+    
+    API'et er frit tilgængeligt, simpelt og nemt at bruge!
+    
+    Kildekoden er tilgængelig, og bugs/PRs er velkomne på Github.
+    
+    
+    Baseret på de åbne API'er:
+     * energidataservice.dk
+     * https://api.elnet.greenpowerdenmark.dk/api/supplierlookup
+  termsOfService: https://givmignubareelprisen.dk
+  contact:
+    email: mads@mchro.dk
+  
+  version: 0.1.0
+externalDocs:
+  description: givmignubareelprisen.dk
+  url: https://givmignubareelprisen.dk
+servers:
+  - url: https://givmignubareelprisen.dk
+tags:
+  - name: Elpriser
+paths:
+  /elpris/:
+    get:
+      tags:
+        - Elpriser
+      summary: Elpris som JSON for givet selskab
+      description: Multiple status values can be provided with comma separated strings
+      parameters:
+        - name: GLN_Number
+          in: query
+          description: GLN nummer for selskabet
+          required: true
+          schema:
+            type: string
+            default: "5790000611003"
+        - name: start
+          in: query
+          description: Start dato
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gridCompany:
+                    $ref: '#/components/schemas/GridCompany'
+                  prices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Price'
+        '400':
+          description: Invalid parameters
+  /adresse/{address}:
+    get:
+      tags:
+        - Elpriser
+      summary: Elpris som JSON, udfra adresse
+      description: Multiple status values can be provided with comma separated strings
+      parameters:
+        - name: address
+          in: path
+          description: Status values that need to be considered for filter
+          required: true
+          example: Sofiendalsvej 80, 9200 Aalborg
+          schema:
+            type: string
+        - name: start
+          in: query
+          description: Start dato
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+      responses:
+        '302':
+          description: Elselskab fundet ud fra adresse
+          headers:
+            Location:
+              description: URI for priser for det fundne elselskab
+              schema:
+                type: string
+                example: /elpris?GLN_Number=5790000611003
+        '400':
+          description: Ugyldig adresse
+        '500':
+          description: Adresse fundet, men data eksisterer ikke for elselskab
+components:
+  schemas:
+    Price:
+      type: object
+      properties:
+        HourDk:
+          type: string
+          format: datetime
+          example: 2024-02-24T00:00:00
+        HourUTC:
+          type: string
+          format: datetime
+          example: 2024-02-23T23:00:00
+        SpotPrice:
+          type: number
+          example: 0.495459991
+        ElAfgift:
+          type: number
+          example: 0.761
+        EnergiNetNetTarif:
+          type: number
+          example: 0.074
+        EnergiNetSystemTarif:
+          type: number
+          example: 0.051
+        NetselskabTarif:
+          type: number
+          example: 0.110
+        TotalExMoms:
+          type: number
+          example: 1.4915599910000001
+        Moms:
+          type: number
+          example: 0.37288999775000004
+        Total:
+          type: number
+          example: 1.864449988750000
+    GridCompany:
+      type: object
+      properties:
+        name:
+          type: string
+          example: N1 A/S
+        gln_Number:
+          type: string
+          example: 5790000611003
+        chargeTypeCode:
+          type: string
+          example: T-C-F-T-TD
+        gridCompanyNumber:
+          type: string
+          example: "344"
+        priceArea:
+          type: string
+          example: "DK1"
+          enum:
+            - "DK1"
+            - "DK2"
