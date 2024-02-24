@@ -1,5 +1,6 @@
 # test_app.py
 import unittest
+from parameterized import parameterized, parameterized_class
 import datetime
 from flask import Flask, jsonify
 import app
@@ -122,6 +123,23 @@ class TestApp(unittest.TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.location, 'http://localhost/elpris?GLN_Number=5790000611003')
+
+
+    @parameterized.expand([
+        ("Åvej 4, 9850 Hirtshals", "5790000610877"),
+        ("Kastanievej 9C, 9300 Sæby", "5790001095277"),
+        ("Karen Blixens Vej 65, 7430 Ikast", "5790000682102"),
+        ("Dusager 22, 8200 Aarhus N", "5790000704842"),
+        ("Nyhavevej 12, 8450 Hammel", "5790001090166"),
+        ("Solvej 9, 9293 Kongerslev", "5790002502699"),
+        ("Kirkegade 10, 6880 Tarm", "5790000706419"),
+        ("Nupark 51, 7500 Holstebro", "5790001090111"),
+    ])
+    def test_addressroute(self, addr, expectedGLN):
+        response = self.app.get('/adresse/' + addr)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.location, 'http://localhost/elpris?GLN_Number=' + expectedGLN)
 
 
 if __name__ == '__main__':

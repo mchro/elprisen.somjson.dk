@@ -86,6 +86,7 @@ gridCompanies = [
     GridCompany("N1 A/S", "5790000611003", "T-C-F-T-TD", "344", "DK1"),
     GridCompany("Zeanet A/S", "5790001089375", "43110", "860", "DK2"),
     GridCompany("NOE Net A/S", "5790000395620", "30030", "347", "DK1"),
+    GridCompany("Radius Elnet A/S", "5790000705689", "DT_C_01", "790", "DK2"),
     GridCompany("Radius Elnet A/S", "5790000705689", "DT_C_01", "791", "DK2"),
     GridCompany("Netselskabet Elværk A/S - 331", "5790000681358", "5NCFF", "331", "DK1"),
     GridCompany("TREFOR El-Net Øst A/S", "5790000706686", "46", "911", "DK2"),
@@ -108,6 +109,15 @@ gridCompanies = [
     GridCompany("TREFOR El-net A/S", "5790000392261", "C", "244", "DK1"),
     GridCompany("Cerius A/S", "5790000705184", "30TR_C_ET", "740", "DK2"),
     GridCompany("Elinord A/S", "5790001095277", "43300", "051", "DK1"),
+    GridCompany("Dinel A/S - 233", "5790000610099", "TCL<100_02", "233", "DK1"),
+    GridCompany("Ikast El Net A/S", "5790000682102", "IEV-NT-05", "342", "DK1"),
+    GridCompany("KONSTANT Net A/S", "5790000704842", "151-NT01T", "151", "DK1"),
+    GridCompany("KONSTANT Net A/S", "5790000683345", "245-NT01T", "245", "DK1"),
+    GridCompany("Hammel El-forsyning Net A/S", "5790001090166", "C-Tarif", "141", "DK1"),
+    GridCompany("El-net Kongerslev A/S", "5790002502699", "C-Tarif", "016", "DK1"),
+    GridCompany("Tarm Elværk Net A/S", "5790000706419", "TEV-NT-11T", "384", "DK1"),
+    GridCompany("L-NET A/S", "5790001090111", "4000", "351", "DK1"),
+
 ]
 
 elafgift = 0.761
