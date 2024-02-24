@@ -155,7 +155,9 @@ def adresse(address):
         print(f'Gridcompany not found for number {gridCompanyNumber}')
         abort(500, f'Gridcompany not found for number {gridCompanyNumber}')
 
-    return redirect(url_for('elpris') + "?GLN_Number=" + gridCompany.gln_Number)
+    startDate = request.args.get('start')
+    start = startDate and '&start=' + startDate or ''
+    return redirect(url_for('elpris') + "?GLN_Number=" + gridCompany.gln_Number + start)
 
 @app.route('/elpris')
 def elpris():
