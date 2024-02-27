@@ -64,10 +64,10 @@ paths:
                 properties:
                   gridCompany:
                     $ref: '#/components/schemas/GridCompany'
-                  prices:
+                  records:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Price'
+                      $ref: '#/components/schemas/Record'
         '400':
           description: Invalid parameters
   /adresse/{address}:
@@ -107,7 +107,7 @@ paths:
           description: Adresse fundet, men data eksisterer ikke for elselskab
 components:
   schemas:
-    Price:
+    Record:
       type: object
       properties:
         HourDk:
@@ -140,6 +140,9 @@ components:
           type: number
           example: 0.37288999775000004
         Total:
+          type: number
+          example: 1.864449988750000
+        CO2Emission:
           type: number
           example: 1.864449988750000
     GridCompany:

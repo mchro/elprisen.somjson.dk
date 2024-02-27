@@ -217,10 +217,10 @@ def elpris():
 
     spotprices = get_spotprices(startDate, priceArea)
     tariffs = get_tariffs_for_date(startDate, gln_Number, chargeTypeCode)
+    co2emissions = get_co2emissions_avgperhour(startDate, priceArea)
 
-
-    prices = []
-    for (p, hour) in zip(spotprices['records'], range(len(spotprices['records']))):
+    records = []
+    for (p, hour, emission) in zip(spotprices['records'], range(len(spotprices['records'])), co2emissions['records']):
         pout = {
             'HourDK': p['HourDK'],
             'HourUTC': p['HourUTC'],
@@ -230,19 +230,21 @@ def elpris():
             'EnergiNetNetTarif': energinet_nettarif,
             'EnergiNetSystemTarif': energinet_systemtarif,
 
-            'NetselskabTarif': tariffs['Price%d' % (hour % 24 + 1)]
+            'NetselskabTarif': tariffs['Price%d' % (hour % 24 + 1)],
+
+            'CO2Emission': emission['CO2Emission'],
         }
         pout['TotalExMoms'] = pout['SpotPrice'] + pout['ElAfgift'] + \
                 pout['EnergiNetNetTarif'] + pout['EnergiNetSystemTarif'] + \
                 pout['NetselskabTarif']
         pout['Moms'] = pout['TotalExMoms'] * 0.25
         pout['Total'] = pout['TotalExMoms'] + pout['Moms']
-        prices.append(pout)
+        records.append(pout)
 
     
     return jsonify({
         'gridCompany': gridCompany,
-        'prices': prices
+        'records': records
         })
 
 @app.route('/apidocs/')
