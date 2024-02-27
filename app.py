@@ -35,6 +35,51 @@ def get_spotprices(start, priceArea):
     else:
         return None
 
+@cache.memoize(timeout=60)
+def get_co2emissions(start, priceArea):
+    params = {
+        "start": start.isoformat(),
+        "filter": '{"PriceArea":"%s"}' % priceArea,
+        "sort": "Minutes5UTC asc",
+    }
+    response = requests.get('https://api.energidataservice.dk/dataset/CO2EmisProg', params=params)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
+
+def hour_from_isotimestamp(ts):
+    return ts[:len("YYYY-MM-DDTHH")]
+
+@cache.memoize(timeout=60)
+def get_co2emissions_avgperhour(start, priceArea):
+    co2emissions = get_co2emissions(start, priceArea)
+
+    perhour = []
+    curhour = None
+    curvalues = []
+    for x in co2emissions['records']:
+        xhour = hour_from_isotimestamp(x['Minutes5DK'])
+        if curhour is None or curhour != xhour:
+            if curvalues != []:
+                perhour += [{
+                        "HourDK": curhour + ":00:00",
+                        "CO2Emission": sum(curvalues) / len(curvalues)
+                    }]
+            curhour = xhour
+            curvalues = []
+
+        curvalues += [x['CO2Emission']]
+
+    perhour += [{
+            "HourDK": curhour + ":00:00",
+            "CO2Emission": sum(curvalues) / len(curvalues)
+        }]
+
+    return {
+        'records': perhour,
+        }
+
 @cache.memoize(timeout=60*60)
 def get_tariffs(gln_Number, chargeTypeCode):
     params = {

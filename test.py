@@ -19,6 +19,27 @@ class TestApp(unittest.TestCase):
         self.assertEqual(hour0['PriceArea'], 'DK1')
         self.assertEqual(hour0['SpotPriceDKK'], 68.800003)
 
+    def test_co2emissions(self):
+        startDate = app.date_from_reqparam("2024-02-23")
+        co2emissions = app.get_co2emissions(startDate, "DK1")
+
+        hour0 = co2emissions['records'][0]
+        self.assertEqual(hour0['Minutes5DK'], '2024-02-23T00:00:00')
+        self.assertEqual(hour0['PriceArea'], 'DK1')
+        self.assertEqual(hour0['CO2Emission'], 87.0)
+
+    def test_co2emissions_avgperhour(self):
+        startDate = app.date_from_reqparam("2024-02-23")
+        co2emissions = app.get_co2emissions_avgperhour(startDate, "DK1")
+
+        hour0 = co2emissions['records'][0]
+        self.assertEqual(hour0['HourDK'], '2024-02-23T00:00:00')
+        self.assertEqual(hour0['CO2Emission'], 94.25)
+
+        hour1 = co2emissions['records'][1]
+        self.assertEqual(hour1['HourDK'], '2024-02-23T01:00:00')
+        self.assertEqual(hour1['CO2Emission'], 95.08333333333333)
+
     def test_get_tariffs(self):
         gridCompany = app.gridCompanies[0]
         self.assertEqual(gridCompany.name, "N1 A/S")
