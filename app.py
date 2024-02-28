@@ -5,6 +5,7 @@ from flask_caching import Cache
 import requests
 from datetime import datetime
 from dataclasses import dataclass
+from itertools import zip_longest
 from typing import Optional
 
 app = Flask(__name__)
@@ -220,7 +221,7 @@ def elpris():
     co2emissions = get_co2emissions_avgperhour(startDate, priceArea)
 
     records = []
-    for (p, hour, emission) in zip(spotprices['records'], range(len(spotprices['records'])), co2emissions['records']):
+    for (p, hour, emission) in zip_longest(spotprices['records'], range(len(spotprices['records'])), co2emissions['records']):
         pout = {
             'HourDK': p['HourDK'],
             'HourUTC': p['HourUTC'],
@@ -232,7 +233,7 @@ def elpris():
 
             'NetselskabTarif': tariffs['Price%d' % (hour % 24 + 1)],
 
-            'CO2Emission': emission['CO2Emission'],
+            'CO2Emission': emission and emission['CO2Emission'] or None,
         }
         pout['TotalExMoms'] = pout['SpotPrice'] + pout['ElAfgift'] + \
                 pout['EnergiNetNetTarif'] + pout['EnergiNetSystemTarif'] + \
