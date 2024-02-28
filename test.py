@@ -3,6 +3,7 @@ import unittest
 from parameterized import parameterized, parameterized_class
 import datetime
 from flask import Flask, jsonify
+import json
 import app
 
 class TestApp(unittest.TestCase):
@@ -181,6 +182,15 @@ class TestApp(unittest.TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.location, 'http://localhost/elpris?GLN_Number=5790000611003&start=2024-01-01')
+
+    def test_gridcompanies(self):
+        response = self.app.get('/gridcompanies')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json[0]['name'])
+        self.assertTrue(response.json[0]['gln_Number'])
+        self.assertTrue(response.json[0]['priceArea'])
+        self.assertTrue(response.json[0]['gridCompanyNumber'])
 
 
 if __name__ == '__main__':

@@ -155,6 +155,7 @@ gridCompanies = [
     GridCompany("TREFOR El-net A/S", "5790000392261", "C", "244", "DK1"),
     GridCompany("Cerius A/S", "5790000705184", "30TR_C_ET", "740", "DK2"),
     GridCompany("Elinord A/S", "5790001095277", "43300", "051", "DK1"),
+    GridCompany("Dinel A/S - 232", "5790000610099", "TCL<100_02", "232", "DK1"),
     GridCompany("Dinel A/S - 233", "5790000610099", "TCL<100_02", "233", "DK1"),
     GridCompany("Ikast El Net A/S", "5790000682102", "IEV-NT-05", "342", "DK1"),
     GridCompany("KONSTANT Net A/S", "5790000704842", "151-NT01T", "151", "DK1"),
@@ -165,6 +166,11 @@ gridCompanies = [
     GridCompany("L-NET A/S", "5790001090111", "4000", "351", "DK1"),
 
 ]
+
+
+@app.route('/gridcompanies')
+def route_gridcompanies():
+    return jsonify(gridCompanies)
 
 elafgift = 0.761
 
@@ -250,7 +256,6 @@ def elpris():
 
 @app.route('/apidocs/')
 def swagger_ui():
-    print("hest")
     return render_template('swagger_ui.html')
 
 @app.route('/apispec')

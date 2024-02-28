@@ -37,7 +37,6 @@ paths:
       tags:
         - Elpriser
       summary: Elpris som JSON for givet selskab
-      description: Multiple status values can be provided with comma separated strings
       parameters:
         - name: GLN_Number
           in: query
@@ -75,7 +74,6 @@ paths:
       tags:
         - Elpriser
       summary: Elpris som JSON, udfra adresse
-      description: Multiple status values can be provided with comma separated strings
       parameters:
         - name: address
           in: path
@@ -105,6 +103,20 @@ paths:
           description: Ugyldig adresse
         '500':
           description: Adresse fundet, men data eksisterer ikke for elselskab
+  /gridcompanies:
+    get:
+      tags:
+        - Gridcompanies
+      summary: Alle kendte netselskaber
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GridCompany'
 components:
   schemas:
     Record:
