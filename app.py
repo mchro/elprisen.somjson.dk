@@ -164,9 +164,10 @@ gridCompanies = [
     GridCompany("El-net Kongerslev A/S", "5790002502699", "C-Tarif", "016", "DK1"),
     GridCompany("Tarm Elværk Net A/S", "5790000706419", "TEV-NT-11T", "384", "DK1"),
     GridCompany("L-NET A/S", "5790001090111", "4000", "351", "DK1"),
-
+    GridCompany("Hjerting Transformatorforening", "5790001095376", "C-Tarif", "371", "DK1"),
+    GridCompany("Nakskov Elnet A/S", "5790001088460", "92TR_C_ET", "853", "DK2"),
+    GridCompany("Læsø Elnet A/S", "5790001103460", "43100", "085", "DK1"),
 ]
-
 
 @app.route('/gridcompanies')
 def route_gridcompanies():
@@ -179,9 +180,6 @@ energinet_nettarif = 0.074
 energinet_systemtarif = 0.051
 
 moms = 1.25 #percentage
-
-
-#TODO: support address lookup by https://api.elnet.greenpowerdenmark.dk/api/supplierlookup/Ringstedgade%2066,%204000%20Roskilde
 
 @cache.memoize(timeout=60*60)
 def get_info_for_address(address):
