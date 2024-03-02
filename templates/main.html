@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Elpris API - elprisen som JSON</title>
+    <style>
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+
+  <body>
+    <h1>Giv mig nu bare elprisen som JSON</h1>
+
+    <a href="/apidocs">API dokumentation, OpenAPI</a>
+
+    <div style="width: 50%; float: right;">
+      <label for="gridcompany">Netselskab:</label>
+      <select id="dropdown">
+        <option>N1</option>
+      </select>
+
+      <canvas id="myChart"></canvas>
+    </div>
+
+<script>
+  const ctx = document.getElementById('myChart');
+  const dropdown = document.getElementById('dropdown');
+
+  const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {},
+        options: {
+          scales: {
+            y: {
+              stacked: true,
+            },
+            x: {
+              stacked: true
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+
+              // grid line settings
+              grid: {
+                drawOnChartArea: false, // only want the grid lines for one axis to show up
+              },
+            },
+          }
+        }
+      });
+
+  fetch('/gridcompanies')
+  .then(x => x.json())
+  .then((gridcompanies) => {
+    dropdown.options.length = 0;
+
+    gridcompanies.forEach((gridCompany) => {
+      dropdown.add(new Option(gridCompany.name, gridCompany.gln_Number));
+    });
+
+    dropdown.addEventListener('change', function (e) {
+      chart_elpris(dropdown.selectedOptions[0].value);
+    });
+  });
+
+  function chart_elpris(gln_number) {
+    fetch('/elpris?GLN_Number=' + gln_number)
+    .then(x => x.json())
+    .then((data) => {
+      console.log("Raw data: ", data);
+      let records = data.records;
+
+      chart.data = {
+          labels: records.map(row => row.HourDK),
+          datasets: [
+          {
+            label: 'Elpris',
+            data: records.map(row => row.Total),
+            borderWidth: 1
+          },
+          {
+            label: 'ElAfgift',
+            data: records.map(row => row.ElAfgift),
+            borderWidth: 1,
+            stack: 'dele',
+          },
+          {
+            label: 'EnergiNetNetTarif',
+            data: records.map(row => row.EnergiNetNetTarif),
+            borderWidth: 1,
+            stack: 'dele',
+          },
+          {
+            label: 'EnergiNetSystemTarif',
+            data: records.map(row => row.EnergiNetSystemTarif),
+            borderWidth: 1,
+            stack: 'dele',
+          },
+          {
+            label: 'NetselskabTarif',
+            data: records.map(row => row.NetselskabTarif),
+            borderWidth: 1,
+            stack: 'dele',
+          },
+          {
+            label: 'SpotPrice',
+            data: records.map(row => row.SpotPrice),
+            borderWidth: 1,
+            stack: 'dele',
+          },
+          {
+            label: 'Moms',
+            data: records.map(row => row.Moms),
+            borderWidth: 1,
+            stack: 'dele',
+          },
+          {
+            label: 'CO2Emission',
+            data: records.map(row => row.CO2Emission),
+            type: 'line',
+            yAxisID: 'y1',
+            tension: 0.1,
+          },
+          ]
+        };
+
+        chart.update('none');
+    })
+    .catch(console.error);
+  }
+
+  chart_elpris('5790000611003');
+
+</script>
+
+  </body>
+</html>
+

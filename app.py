@@ -20,8 +20,7 @@ cache = Cache(app)
 
 @app.route('/')
 def maindoc():
-    return 'Hello, Docker and Nginx!'
-
+    return render_template('main.html')
 
 @cache.memoize(timeout=60)
 def get_spotprices(start, priceArea):
