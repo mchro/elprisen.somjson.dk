@@ -33,6 +33,7 @@ def get_spotprices(start, priceArea):
     if response.status_code == 200:
         return response.json()
     else:
+        print ("Error getting spotprices", response)
         return None
 
 @cache.memoize(timeout=60)
@@ -71,10 +72,12 @@ def get_co2emissions_avgperhour(start, priceArea):
 
         curvalues += [x['CO2Emission']]
 
-    perhour += [{
-            "HourDK": curhour + ":00:00",
-            "CO2Emission": sum(curvalues) / len(curvalues)
-        }]
+    #handle last hour
+    if curhour:
+        perhour += [{
+                "HourDK": curhour + ":00:00",
+                "CO2Emission": sum(curvalues) / len(curvalues)
+            }]
 
     return {
         'records': perhour,
@@ -222,6 +225,8 @@ def elpris():
     spotprices = get_spotprices(startDate, priceArea)
     tariffs = get_tariffs_for_date(startDate, gln_Number, chargeTypeCode)
     co2emissions = get_co2emissions_avgperhour(startDate, priceArea)
+
+    #TODO: handle if more than one tariff should be applied over the timeperiod
 
     records = []
     for (p, hour, emission) in zip_longest(spotprices['records'], range(len(spotprices['records'])), co2emissions['records']):
