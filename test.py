@@ -132,7 +132,7 @@ class TestApp(unittest.TestCase):
         address = "Sofiendalsvej 80, 9200 Aalborg"
         info = app.get_info_for_address(address)
 
-        self.assertEqual(info['name'], 'N1 A/S')
+        self.assertEqual(info['name'], 'Elnetselskabet N1')
         self.assertEqual(info['def'], '344')
 
     def test_mainroute(self):
