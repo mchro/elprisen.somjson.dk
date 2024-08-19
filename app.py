@@ -29,7 +29,7 @@ def get_spotprices(start, priceArea):
         "filter": '{"PriceArea":"%s"}' % priceArea,
         "sort": "HourUTC asc",
     }
-    response = requests.get('https://api.energidataservice.dk/dataset/elspotprices', params=params)
+    response = requests.get('https://api.energidataservice.dk/dataset/elspotprices', params=params, verify="energidataservice.pem")
     if response.status_code == 200:
         return response.json()
     else:
@@ -43,7 +43,7 @@ def get_co2emissions(start, priceArea):
         "filter": '{"PriceArea":"%s"}' % priceArea,
         "sort": "Minutes5UTC asc",
     }
-    response = requests.get('https://api.energidataservice.dk/dataset/CO2EmisProg', params=params)
+    response = requests.get('https://api.energidataservice.dk/dataset/CO2EmisProg', params=params, verify="energidataservice.pem")
     if response.status_code == 200:
         return response.json()
     else:
@@ -90,7 +90,7 @@ def get_tariffs(gln_Number, chargeTypeCode):
         #"sort": "HourUTC asc",
         "limit": 0,
     }
-    response = requests.get('https://api.energidataservice.dk/dataset/DatahubPriceList', params=params)
+    response = requests.get('https://api.energidataservice.dk/dataset/DatahubPriceList', params=params, verify="energidataservice.pem")
     if response.status_code == 200:
         return response.json()['records']
     else:
