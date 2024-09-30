@@ -223,13 +223,12 @@ def elpris():
         chargeTypeCode = gridCompany.chargeTypeCode
 
     spotprices = get_spotprices(startDate, priceArea)
-    tariffs = get_tariffs_for_date(startDate, gln_Number, chargeTypeCode)
     co2emissions = get_co2emissions_avgperhour(startDate, priceArea)
-
-    #TODO: handle if more than one tariff should be applied over the timeperiod
 
     records = []
     for (p, hour, emission) in zip_longest(spotprices['records'], range(len(spotprices['records'])), co2emissions['records']):
+        tariffs = get_tariffs_for_date(datetime.fromisoformat(p['HourDK']), gln_Number, chargeTypeCode)
+
         pout = {
             'HourDK': p['HourDK'],
             'HourUTC': p['HourUTC'],

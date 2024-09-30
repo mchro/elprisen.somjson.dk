@@ -154,6 +154,19 @@ class TestApp(unittest.TestCase):
         self.assertEqual(hour1['NetselskabTarif'], 0.1101)
         self.assertEqual(hour1['Total'], 1.2590999999999999)
 
+    def test_mainroute_changeoverdate(self):
+        response = self.app.get('/elpris?start=2024-09-30')
+
+        self.assertEqual(response.status_code, 200)
+
+        hour0 = response.json['records'][6]
+        self.assertEqual(hour0['HourDK'], '2024-09-30T06:00:00')
+        self.assertEqual(hour0['NetselskabTarif'], 0.1652)
+
+        hour1 = response.json['records'][24+6]
+        self.assertEqual(hour1['HourDK'], '2024-10-01T06:00:00')
+        self.assertEqual(hour1['NetselskabTarif'], 0.3303)
+
     def test_addressroute1(self):
         response = self.app.get('/adresse/Sofiendalsvej 80, 9200 Aalborg')
 
