@@ -178,6 +178,7 @@ def route_gridcompanies():
 elafgift = 0.761
 
 #https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/
+#TODO: get these from the API, or update for 2025
 energinet_nettarif = 0.074
 energinet_systemtarif = 0.051
 

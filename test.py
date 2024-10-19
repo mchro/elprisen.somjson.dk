@@ -171,7 +171,7 @@ class TestApp(unittest.TestCase):
         response = self.app.get('/adresse/Sofiendalsvej 80, 9200 Aalborg')
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.location, 'http://localhost/elpris?GLN_Number=5790000611003')
+        self.assertEqual(response.location, '/elpris?GLN_Number=5790000611003')
 
 
     @parameterized.expand([
@@ -193,13 +193,13 @@ class TestApp(unittest.TestCase):
         response = self.app.get('/adresse/' + addr)
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.location, 'http://localhost/elpris?GLN_Number=' + expectedGLN)
+        self.assertEqual(response.location, '/elpris?GLN_Number=' + expectedGLN)
 
     def test_addressroute_withstartparam(self):
         response = self.app.get('/adresse/Sofiendalsvej 80, 9200 Aalborg?start=2024-01-01')
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.location, 'http://localhost/elpris?GLN_Number=5790000611003&start=2024-01-01')
+        self.assertEqual(response.location, '/elpris?GLN_Number=5790000611003&start=2024-01-01')
 
     def test_gridcompanies(self):
         response = self.app.get('/gridcompanies')

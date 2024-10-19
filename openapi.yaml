@@ -19,14 +19,14 @@ info:
     Baseret på de åbne API'er:
      * energidataservice.dk
      * https://api.elnet.greenpowerdenmark.dk/api/supplierlookup
-  termsOfService: https://givmignubareelprisen.dk
+  termsOfService: https://elprisen.somjson.dk
   contact:
     email: mads@mchro.dk
   
   version: 0.1.0
 externalDocs:
-  description: givmignubareelprisen.dk
-  url: https://givmignubareelprisen.dk
+  description: elprisen.somjson.dk
+  url: https://elprisen.somjson.dk
 #servers:
 #  - url: https://elpris.smartere.dk
 tags:
