@@ -47,12 +47,11 @@ paths:
             default: "5790000611003"
         - name: start
           in: query
-          description: Start dato
+          description: Start dato (e.g. 2024-01-01)
           required: false
           schema:
             type: string
             format: date
-            example: "2024-01-01"
       responses:
         '200':
           description: successful operation
@@ -84,12 +83,11 @@ paths:
             type: string
         - name: start
           in: query
-          description: Start dato
+          description: Start dato (e.g. 2024-01-01)
           required: false
           schema:
             type: string
             format: date
-            example: "2024-01-01"
       responses:
         '302':
           description: Elselskab fundet ud fra adresse
