@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, abort, redirect, url_for, render_temp
 #from flask_limiter.util import get_remote_address
 from flask_caching import Cache
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from dataclasses import dataclass
 from itertools import zip_longest
 from typing import Optional
@@ -23,12 +23,15 @@ def maindoc():
     return render_template('main.html')
 
 @cache.memoize(timeout=60)
-def get_spotprices(start, priceArea):
+def get_spotprices(start, priceArea, end=None):
     params = {
         "start": start.isoformat(),
         "filter": '{"PriceArea":"%s"}' % priceArea,
         "sort": "HourUTC asc",
     }
+    if end:
+        params['end'] = end.isoformat()
+
     response = requests.get('https://api.energidataservice.dk/dataset/elspotprices', params=params, verify="energidataservice.pem")
     if response.status_code == 200:
         return response.json()
@@ -37,12 +40,15 @@ def get_spotprices(start, priceArea):
         return None
 
 @cache.memoize(timeout=60)
-def get_co2emissions(start, priceArea):
+def get_co2emissions(start, priceArea, end=None):
     params = {
         "start": start.isoformat(),
         "filter": '{"PriceArea":"%s"}' % priceArea,
         "sort": "Minutes5UTC asc",
     }
+    if end:
+        params['end'] = end.isoformat()
+
     response = requests.get('https://api.energidataservice.dk/dataset/CO2EmisProg', params=params, verify="energidataservice.pem")
     if response.status_code == 200:
         return response.json()
@@ -53,8 +59,8 @@ def hour_from_isotimestamp(ts):
     return ts[:len("YYYY-MM-DDTHH")]
 
 @cache.memoize(timeout=60)
-def get_co2emissions_avgperhour(start, priceArea):
-    co2emissions = get_co2emissions(start, priceArea)
+def get_co2emissions_avgperhour(start, priceArea, end=None):
+    co2emissions = get_co2emissions(start, priceArea, end)
 
     perhour = []
     curhour = None
@@ -212,6 +218,7 @@ def adresse(address):
     start = startDate and '&start=' + startDate or ''
     return redirect(url_for('elpris') + "?GLN_Number=" + gridCompany.gln_Number + start)
 
+
 @app.route('/elpris')
 def elpris():
     startDate = request.args.get('start', datetime.now().date(), type=date_from_reqparam)
@@ -223,8 +230,13 @@ def elpris():
     if not chargeTypeCode:
         chargeTypeCode = gridCompany.chargeTypeCode
 
-    spotprices = get_spotprices(startDate, priceArea)
-    co2emissions = get_co2emissions_avgperhour(startDate, priceArea)
+    endDate = None
+    one_month_ago = datetime.now().date() - timedelta(days=30)
+    if startDate < one_month_ago:
+        endDate = startDate + timedelta(days=30)
+
+    spotprices = get_spotprices(startDate, priceArea, endDate)
+    co2emissions = get_co2emissions_avgperhour(startDate, priceArea, endDate)
 
     records = []
     for (p, hour, emission) in zip_longest(spotprices['records'], range(len(spotprices['records'])), co2emissions['records']):
