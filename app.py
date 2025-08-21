@@ -181,7 +181,11 @@ gridCompanies = [
 def route_gridcompanies():
     return jsonify(gridCompanies)
 
-elafgift = 0.761
+def elafgift(year):
+    if year == 2025:
+        return 0.720
+    elif year == 2024:
+        return 0.761
 
 #https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/
 #TODO: get these from the API, or update for 2026
@@ -240,14 +244,15 @@ def elpris():
 
     records = []
     for (p, hour, emission) in zip_longest(spotprices['records'], range(len(spotprices['records'])), co2emissions['records']):
-        tariffs = get_tariffs_for_date(datetime.fromisoformat(p['HourDK']), gln_Number, chargeTypeCode)
+        hourstamp = datetime.fromisoformat(p['HourDK'])
+        tariffs = get_tariffs_for_date(hourstamp, gln_Number, chargeTypeCode)
 
         pout = {
             'HourDK': p['HourDK'],
             'HourUTC': p['HourUTC'],
             'SpotPrice': p['SpotPriceDKK'] / 1000.0, # MWh to KWh
 
-            'ElAfgift': elafgift,
+            'ElAfgift': elafgift(hourstamp.year),
             'EnergiNetNetTarif': energinet_nettarif,
             'EnergiNetSystemTarif': energinet_systemtarif,
 

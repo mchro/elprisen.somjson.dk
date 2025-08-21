@@ -136,23 +136,23 @@ class TestApp(unittest.TestCase):
         self.assertEqual(info['def'], '344')
 
     def test_mainroute(self):
-        response = self.app.get('/elpris?start=2024-02-23')
+        response = self.app.get('/elpris?start=2025-07-23')
 
         self.assertEqual(response.status_code, 200)
 
         hour0 = response.json['records'][0]
-        self.assertEqual(hour0['HourDK'], '2024-02-23T00:00:00')
-        self.assertEqual(hour0['CO2Emission'], 94.25)
-        self.assertEqual(hour0['SpotPrice'], 0.068800003)
-        self.assertEqual(hour0['NetselskabTarif'], 0.1101)
-        self.assertEqual(hour0['Total'], 1.34362500375)
+        self.assertEqual(hour0['HourDK'], '2025-07-23T00:00:00')
+        self.assertEqual(hour0['CO2Emission'], 9.833333333333334)
+        self.assertEqual(hour0['SpotPrice'], 0.5672868)
+        self.assertEqual(hour0['NetselskabTarif'], 0.0867)
+        self.assertEqual(hour0['Total'], 1.8862335)
 
         hour1 = response.json['records'][1]
-        self.assertEqual(hour1['HourDK'], '2024-02-23T01:00:00')
-        self.assertEqual(hour1['CO2Emission'], 95.08333333333333)
-        self.assertEqual(hour1['SpotPrice'], 0.011179999999999999)
-        self.assertEqual(hour1['NetselskabTarif'], 0.1101)
-        self.assertEqual(hour1['Total'], 1.2715999999999998)
+        self.assertEqual(hour1['HourDK'], '2025-07-23T01:00:00')
+        self.assertEqual(hour1['CO2Emission'], 12.583333333333334)
+        self.assertEqual(hour1['SpotPrice'], 0.522501)
+        self.assertEqual(hour1['NetselskabTarif'], 0.0867)
+        self.assertEqual(hour1['Total'], 1.8302512499999999)
 
     def test_mainroute_noparams(self):
         response = self.app.get('/elpris')
