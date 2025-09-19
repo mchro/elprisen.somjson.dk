@@ -27,6 +27,7 @@ class TestApp(unittest.TestCase):
 
         for sp, dah in zip(spotprices['records'], dayaheadprices['records']):
             self.assertEqual(sp['HourDK'], dah['HourDK'])
+            self.assertEqual(sp['HourUTC'], dah['HourUTC'])
             self.assertEqual(sp['SpotPriceDKK'], dah['SpotPriceDKK'])
 
     def test_co2emissions(self):

@@ -3,7 +3,8 @@ from flask import Flask, request, jsonify, abort, redirect, url_for, render_temp
 #from flask_limiter.util import get_remote_address
 from flask_caching import Cache
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+import pytz
 from dataclasses import dataclass
 from itertools import zip_longest
 from typing import Optional
@@ -56,6 +57,24 @@ def get_dayahead_prices(start, priceArea, end=None):
         print ("Error getting spotprices", response)
         return None
 
+
+def _convert_copenhagen_to_utc_hour(timestamp_str):
+    """
+    Converts a timestamp string in the Copenhagen timezone to UTC.
+
+    Args:
+        timestamp_str: A string representing the timestamp in partial ISO-format YYYY-MM-DDTHH format, in the Copenhagen timezone.
+
+    Returns:
+        The corresponding ISO timestamp in UTC.
+    """
+    copenhagen_timezone = pytz.timezone('Europe/Copenhagen')
+    hour_dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H")
+    copenhagen_dt = copenhagen_timezone.localize(hour_dt)
+    utc_dt = copenhagen_dt.astimezone(pytz.utc)
+    return utc_dt.strftime("%Y-%m-%dT%H:%M:%S")
+
+
 @cache.memoize(timeout=60)
 def get_spotprices_from_dayahead_prices(start, priceArea, end=None):
     dayaheadprices = get_dayahead_prices(start, priceArea, end)
@@ -69,6 +88,7 @@ def get_spotprices_from_dayahead_prices(start, priceArea, end=None):
             if curvalues != []:
                 perhour += [{
                         "HourDK": curhour + ":00:00",
+                        "HourUTC": _convert_copenhagen_to_utc_hour(curhour),
                         "SpotPriceDKK": sum(curvalues) / len(curvalues)
                     }]
             curhour = xhour
@@ -80,6 +100,7 @@ def get_spotprices_from_dayahead_prices(start, priceArea, end=None):
     if curhour:
         perhour += [{
                 "HourDK": curhour + ":00:00",
+                "HourUTC": _convert_copenhagen_to_utc_hour(curhour),
                 "SpotPriceDKK": sum(curvalues) / len(curvalues)
             }]
 
@@ -287,7 +308,13 @@ def elpris():
     if startDate < one_month_ago:
         endDate = startDate + timedelta(days=30)
 
-    spotprices = get_spotprices_legacy(startDate, priceArea, endDate)
+    #officially the data stops flowing date(2025, 9, 30), but let's change over sooner
+    spotprices_cutoff_date = date(2025, 9, 7)
+    if startDate > spotprices_cutoff_date:
+        spotprices = get_spotprices_from_dayahead_prices(startDate, priceArea, endDate)
+    else:
+        spotprices = get_spotprices_legacy(startDate, priceArea, endDate)
+
     co2emissions = get_co2emissions_avgperhour(startDate, priceArea, endDate)
 
     records = []
