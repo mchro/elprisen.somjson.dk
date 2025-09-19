@@ -13,12 +13,21 @@ class TestApp(unittest.TestCase):
 
     def test_spotprices(self):
         startDate = app.date_from_reqparam("2024-02-23")
-        spotprices = app.get_spotprices(startDate, "DK1")
+        spotprices = app.get_spotprices_legacy(startDate, "DK1")
 
         hour0 = spotprices['records'][0]
         self.assertEqual(hour0['HourDK'], '2024-02-23T00:00:00')
         self.assertEqual(hour0['PriceArea'], 'DK1')
         self.assertEqual(hour0['SpotPriceDKK'], 68.800003)
+
+    def test_dayaheadprices_against_legacy(self):
+        startDate = app.date_from_reqparam("2025-09-19")
+        spotprices = app.get_spotprices_legacy(startDate, "DK1")
+        dayaheadprices = app.get_spotprices_from_dayahead_prices(startDate, "DK1")
+
+        for sp, dah in zip(spotprices['records'], dayaheadprices['records']):
+            self.assertEqual(sp['HourDK'], dah['HourDK'])
+            self.assertEqual(sp['SpotPriceDKK'], dah['SpotPriceDKK'])
 
     def test_co2emissions(self):
         startDate = app.date_from_reqparam("2024-02-23")

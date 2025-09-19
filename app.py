@@ -23,7 +23,7 @@ def maindoc():
     return render_template('main.html')
 
 @cache.memoize(timeout=60)
-def get_spotprices(start, priceArea, end=None):
+def get_spotprices_legacy(start, priceArea, end=None):
     params = {
         "start": start.isoformat(),
         "filter": '{"PriceArea":"%s"}' % priceArea,
@@ -38,6 +38,54 @@ def get_spotprices(start, priceArea, end=None):
     else:
         print ("Error getting spotprices", response)
         return None
+
+@cache.memoize(timeout=60)
+def get_dayahead_prices(start, priceArea, end=None):
+    params = {
+        "start": start.isoformat(),
+        "filter": '{"PriceArea":"%s"}' % priceArea,
+        "sort": "TimeUTC asc",
+    }
+    if end:
+        params['end'] = end.isoformat()
+
+    response = requests.get('https://api.energidataservice.dk/dataset/DayAheadPrices', params=params, verify="energidataservice.pem")
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print ("Error getting spotprices", response)
+        return None
+
+@cache.memoize(timeout=60)
+def get_spotprices_from_dayahead_prices(start, priceArea, end=None):
+    dayaheadprices = get_dayahead_prices(start, priceArea, end)
+
+    perhour = []
+    curhour = None
+    curvalues = []
+    for x in dayaheadprices['records']:
+        xhour = hour_from_isotimestamp(x['TimeDK'])
+        if curhour is None or curhour != xhour:
+            if curvalues != []:
+                perhour += [{
+                        "HourDK": curhour + ":00:00",
+                        "SpotPriceDKK": sum(curvalues) / len(curvalues)
+                    }]
+            curhour = xhour
+            curvalues = []
+
+        curvalues += [x['DayAheadPriceDKK']]
+
+    #handle last hour
+    if curhour:
+        perhour += [{
+                "HourDK": curhour + ":00:00",
+                "SpotPriceDKK": sum(curvalues) / len(curvalues)
+            }]
+
+    return {
+        'records': perhour,
+        }
 
 @cache.memoize(timeout=60)
 def get_co2emissions(start, priceArea, end=None):
@@ -239,7 +287,7 @@ def elpris():
     if startDate < one_month_ago:
         endDate = startDate + timedelta(days=30)
 
-    spotprices = get_spotprices(startDate, priceArea, endDate)
+    spotprices = get_spotprices_legacy(startDate, priceArea, endDate)
     co2emissions = get_co2emissions_avgperhour(startDate, priceArea, endDate)
 
     records = []
