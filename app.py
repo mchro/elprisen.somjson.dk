@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, date
 import pytz
 from dataclasses import dataclass
 from itertools import zip_longest
-from typing import Optional
+from typing import Optional, TypedDict, List
 
 app = Flask(__name__)
 
@@ -40,8 +40,19 @@ def get_spotprices_legacy(start, priceArea, end=None):
         print ("Error getting spotprices", response)
         return None
 
+
+class DayAheadPriceRecord(TypedDict):
+    """Represents a single DayAheadPrice record from the API."""
+    TimeUTC: str  # ISO 8601 format
+    TimeDK: str   # ISO 8601 format
+    DayAheadPriceDKK: float
+
+class DayAheadPricesResponse(TypedDict):
+    """Represents the full response from the API."""
+    records: List[DayAheadPriceRecord]
+
 @cache.memoize(timeout=60)
-def get_dayahead_prices(start, priceArea, end=None):
+def get_dayahead_prices(start: datetime, priceArea: str, end: Optional[datetime] = None) -> Optional[DayAheadPricesResponse]:
     params = {
         "start": start.isoformat(),
         "filter": '{"PriceArea":"%s"}' % priceArea,
@@ -76,7 +87,7 @@ def _convert_copenhagen_to_utc_hour(timestamp_str):
 
 
 @cache.memoize(timeout=60)
-def get_spotprices_from_dayahead_prices(start, priceArea, end=None):
+def get_spotprices_from_dayahead_prices(start: datetime, priceArea: str, end: Optional[datetime] = None):
     dayaheadprices = get_dayahead_prices(start, priceArea, end)
 
     perhour = []
@@ -108,8 +119,19 @@ def get_spotprices_from_dayahead_prices(start, priceArea, end=None):
         'records': perhour,
         }
 
+class CO2EmissionRecord(TypedDict):
+    """Represents a single DayAheadPrice record from the API."""
+    Minutes5UTC: str  # ISO 8601 format
+    Minutes5DK: str   # ISO 8601 format
+    PriceArea: str
+    CO2Emission: float
+
+class CO2EmissionsResponse(TypedDict):
+    """Represents the full response from the API."""
+    records: List[DayAheadPriceRecord]
+
 @cache.memoize(timeout=60)
-def get_co2emissions(start, priceArea, end=None):
+def get_co2emissions(start: datetime, priceArea: str, end: Optional[datetime] = None) -> Optional[CO2EmissionsResponse]:
     params = {
         "start": start.isoformat(),
         "filter": '{"PriceArea":"%s"}' % priceArea,
@@ -128,7 +150,7 @@ def hour_from_isotimestamp(ts):
     return ts[:len("YYYY-MM-DDTHH")]
 
 @cache.memoize(timeout=60)
-def get_co2emissions_avgperhour(start, priceArea, end=None):
+def get_co2emissions_avgperhour(start: datetime, priceArea: str, end: Optional[datetime] = None):
     co2emissions = get_co2emissions(start, priceArea, end)
 
     perhour = []
