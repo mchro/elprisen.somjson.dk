@@ -351,7 +351,7 @@ def adresse(address):
     start = startDate and '&start=' + startDate or ''
     detaljer = request.args.get('detaljer')
 
-    if detaljer:
+    if detaljer == "true":
         return redirect(url_for('elpris_detaljer') + "?GLN_Number=" + gridCompany.gln_Number + start)
     else:
         return redirect(url_for('elpris') + "?GLN_Number=" + gridCompany.gln_Number + start)

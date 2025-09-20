@@ -68,6 +68,42 @@ paths:
                       $ref: '#/components/schemas/Record'
         '400':
           description: Invalid parameters
+  /elpris-detaljer:
+    get:
+      tags:
+        - Elpriser
+      summary: Elpris som JSON for givet selskab, detaljeret ned til enkelte timestamps. Pt. timestamps for hvert 15. minut som indført efter 2025-09-30.
+      parameters:
+        - name: GLN_Number
+          in: query
+          description: GLN nummer for selskabet
+          required: true
+          schema:
+            type: string
+            default: "5790000611003"
+        - name: start
+          in: query
+          description: Start dato (e.g. 2024-01-01)
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gridCompany:
+                    $ref: '#/components/schemas/GridCompany'
+                  records:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecordDetaljer'
+        '400':
+          description: Invalid parameters
   /adresse/{address}:
     get:
       tags:
@@ -88,6 +124,12 @@ paths:
           schema:
             type: string
             format: date
+        - name: detaljer
+          in: query
+          description: Redirect til det detaljerede 15mins endpoint
+          required: false
+          schema:
+            type: boolean
       responses:
         '302':
           description: Elselskab fundet ud fra adresse
@@ -125,6 +167,44 @@ components:
           format: datetime
           example: 2024-02-24T00:00:00
         HourUTC:
+          type: string
+          format: datetime
+          example: 2024-02-23T23:00:00
+        SpotPrice:
+          type: number
+          example: 0.495459991
+        ElAfgift:
+          type: number
+          example: 0.761
+        EnergiNetNetTarif:
+          type: number
+          example: 0.074
+        EnergiNetSystemTarif:
+          type: number
+          example: 0.051
+        NetselskabTarif:
+          type: number
+          example: 0.110
+        TotalExMoms:
+          type: number
+          example: 1.4915599910000001
+        Moms:
+          type: number
+          example: 0.37288999775000004
+        Total:
+          type: number
+          example: 1.864449988750000
+        CO2Emission:
+          type: number
+          example: 1.864449988750000
+    RecordDetaljer:
+      type: object
+      properties:
+        TimeDK:
+          type: string
+          format: datetime
+          example: 2024-02-24T00:00:00
+        TimeUTC:
           type: string
           format: datetime
           example: 2024-02-23T23:00:00
