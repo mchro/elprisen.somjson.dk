@@ -349,7 +349,12 @@ def adresse(address):
 
     startDate = request.args.get('start')
     start = startDate and '&start=' + startDate or ''
-    return redirect(url_for('elpris') + "?GLN_Number=" + gridCompany.gln_Number + start)
+    detaljer = request.args.get('detaljer')
+
+    if detaljer:
+        return redirect(url_for('elpris_detaljer') + "?GLN_Number=" + gridCompany.gln_Number + start)
+    else:
+        return redirect(url_for('elpris') + "?GLN_Number=" + gridCompany.gln_Number + start)
 
 @app.route('/elpris-detaljer')
 def elpris_detaljer():

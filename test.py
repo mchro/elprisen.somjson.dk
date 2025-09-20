@@ -218,6 +218,11 @@ class TestApp(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.location, '/elpris?GLN_Number=5790000611003')
 
+    def test_addressroute_detaljer(self):
+        response = self.app.get('/adresse/Sofiendalsvej 80, 9200 Aalborg?detaljer=true')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.location, '/elpris-detaljer?GLN_Number=5790000611003')
 
     @parameterized.expand([
         ("Åvej 4, 9850 Hirtshals", "5790000610877"),
