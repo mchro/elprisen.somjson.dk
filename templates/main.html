@@ -53,6 +53,25 @@
                 drawOnChartArea: false, // only want the grid lines for one axis to show up
               },
             },
+          },
+          plugins: {
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.y !== null) {
+                    label += context.parsed.y;
+                  }
+                  return label;
+                },
+              }
+            }
           }
         }
       });
@@ -72,14 +91,14 @@
   });
 
   function chart_elpris(gln_number) {
-    fetch('/elpris?GLN_Number=' + gln_number)
+    fetch('/elpris-detaljer?GLN_Number=' + gln_number)
     .then(x => x.json())
     .then((data) => {
       console.log("Raw data: ", data);
       let records = data.records;
 
       chart.data = {
-          labels: records.map(row => row.HourDK),
+          labels: records.map(row => row.TimeDK),
           datasets: [
           {
             label: 'Elpris',
@@ -140,6 +159,7 @@
   chart_elpris('5790000611003');
 
 </script>
+
 
   </body>
 </html>
