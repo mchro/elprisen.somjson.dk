@@ -4,6 +4,7 @@ from parameterized import parameterized, parameterized_class
 import datetime
 from flask import Flask, jsonify
 import json
+from pprint import pprint
 import app
 
 class TestApp(unittest.TestCase):
@@ -50,6 +51,30 @@ class TestApp(unittest.TestCase):
         hour1 = co2emissions['records'][1]
         self.assertEqual(hour1['HourDK'], '2024-02-23T01:00:00')
         self.assertEqual(hour1['CO2Emission'], 95.08333333333333)
+
+    def test_co2emissions_aligned_to_timeseries(self):
+        startDate = app.date_from_reqparam("2025-09-20")
+        endDate = app.date_from_reqparam("2025-09-21")
+        timestamps = []
+        current_time = datetime.datetime.combine(startDate, datetime.time.min)
+
+        while current_time <= datetime.datetime.combine(endDate, datetime.time.min):
+            timestamps.append(current_time)
+            current_time += datetime.timedelta(minutes=15)
+
+        co2emissions = app.get_co2emissions_aligned_to_timeseries(startDate, "DK1", timestamps, endDate)
+
+        rec0 = co2emissions['records'][0]
+        self.assertEqual(rec0['TimeDK'], '2025-09-20T00:00:00')
+        self.assertEqual(rec0['CO2Emission'], (12+11+11)/3)
+
+        rec1 = co2emissions['records'][1]
+        self.assertEqual(rec1['TimeDK'], '2025-09-20T00:15:00')
+        self.assertEqual(rec1['CO2Emission'], (12+13+13)/3)
+
+        rec95 = co2emissions['records'][95]
+        self.assertEqual(rec95['TimeDK'], '2025-09-20T23:45:00')
+        self.assertEqual(rec95['CO2Emission'], (121+121+118)/3)
 
     def test_get_tariffs(self):
         gridCompany = app.gridCompanies[0]
@@ -166,6 +191,11 @@ class TestApp(unittest.TestCase):
 
     def test_mainroute_noparams(self):
         response = self.app.get('/elpris')
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_mainroute_detailed_noparams(self):
+        response = self.app.get('/elpris-detaljer')
 
         self.assertEqual(response.status_code, 200)
 

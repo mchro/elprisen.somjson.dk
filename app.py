@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, date
 import pytz
 from dataclasses import dataclass
 from itertools import zip_longest
+from pprint import pprint
 from typing import Optional, TypedDict, List
 
 app = Flask(__name__)
@@ -180,6 +181,43 @@ def get_co2emissions_avgperhour(start: datetime, priceArea: str, end: Optional[d
         'records': perhour,
         }
 
+@cache.memoize(timeout=60)
+def get_co2emissions_aligned_to_timeseries(start: datetime, priceArea: str, timestamps: List[datetime], end: Optional[datetime] = None):
+    co2emissions = get_co2emissions(start, priceArea, end)
+
+    records = []
+    curvalues = []
+    timestamps_idx = 0
+    curts = timestamps[timestamps_idx]
+    nextts = timestamps[timestamps_idx + 1]
+    for x in co2emissions['records']:
+        xts = datetime.fromisoformat(x['Minutes5DK'])
+        if xts >= nextts:
+            if curvalues != []:
+                records += [{
+                        "TimeDK": curts.isoformat(),
+                        "CO2Emission": sum(curvalues) / len(curvalues)
+                    }]
+            timestamps_idx += 1
+            curts = timestamps[timestamps_idx]
+            if timestamps_idx + 1 >= len(timestamps):
+                break
+            nextts = timestamps[timestamps_idx + 1]
+            curvalues = []
+
+        curvalues += [x['CO2Emission']]
+
+    #handle last timestamp
+    if curvalues != []:
+        records += [{
+                "TimeDK": curts.isoformat(),
+                "CO2Emission": sum(curvalues) / len(curvalues)
+            }]
+
+    return {
+        'records': records,
+        }
+
 @cache.memoize(timeout=60*60)
 def get_tariffs(gln_Number, chargeTypeCode):
     params = {
@@ -313,6 +351,55 @@ def adresse(address):
     start = startDate and '&start=' + startDate or ''
     return redirect(url_for('elpris') + "?GLN_Number=" + gridCompany.gln_Number + start)
 
+@app.route('/elpris-detaljer')
+def elpris_detaljer():
+    startDate = request.args.get('start', datetime.now().date(), type=date_from_reqparam)
+    gln_Number = request.args.get('GLN_Number', '5790000611003')
+    gridCompany = next((c for c in gridCompanies if c.gln_Number == gln_Number), None)
+
+    priceArea = request.args.get('PriceArea', gridCompany.priceArea)
+    chargeTypeCode = request.args.get('ChargeTypeCode', gridCompany.chargeTypeCode)
+    if not chargeTypeCode:
+        chargeTypeCode = gridCompany.chargeTypeCode
+
+    endDate = None
+    one_month_ago = datetime.now().date() - timedelta(days=30)
+    if startDate < one_month_ago:
+        endDate = startDate + timedelta(days=30)
+
+    dayaheadprices = get_dayahead_prices(startDate, priceArea, endDate)
+    timestamps = list(map(lambda dah: datetime.fromisoformat(dah['TimeDK']), dayaheadprices['records']))
+    co2emissions = get_co2emissions_aligned_to_timeseries(startDate, priceArea, timestamps, endDate)
+
+    records = []
+    for (p, emission) in zip_longest(dayaheadprices['records'], co2emissions['records']):
+        hourstamp = datetime.fromisoformat(p['TimeDK'])
+        tariffs = get_tariffs_for_date(hourstamp, gln_Number, chargeTypeCode)
+
+        pout = {
+            'TimeDK': p['TimeDK'],
+            'TimeUTC': p['TimeUTC'],
+            'SpotPrice': p['DayAheadPriceDKK'] / 1000.0, # MWh to KWh
+
+            'ElAfgift': elafgift(hourstamp.year),
+            'EnergiNetNetTarif': energinet_nettarif,
+            'EnergiNetSystemTarif': energinet_systemtarif,
+
+            'NetselskabTarif': tariffs['Price%d' % (hourstamp.hour % 24 + 1)],
+
+            'CO2Emission': emission and emission['CO2Emission'] or None,
+        }
+        pout['TotalExMoms'] = pout['SpotPrice'] + pout['ElAfgift'] + \
+                pout['EnergiNetNetTarif'] + pout['EnergiNetSystemTarif'] + \
+                pout['NetselskabTarif']
+        pout['Moms'] = pout['TotalExMoms'] * 0.25
+        pout['Total'] = pout['TotalExMoms'] + pout['Moms']
+        records.append(pout)
+
+    return jsonify({
+        'gridCompany': gridCompany,
+        'records': records
+        })
 
 @app.route('/elpris')
 def elpris():
