@@ -235,7 +235,7 @@ class TestApp(unittest.TestCase):
         ("Nupark 51, 7500 Holstebro", "5790001090111"),
         ("Frejasvej 22, 8464 Galten", "5790000610099"),
         ("Bytoften 8, 6710 Esbjerg", "5790001095376"),
-        ("Stavangervej 13, 4900 Nakskov", "5790001088460"),
+        ("Stavangervej 13, 4900 Nakskov", "5790000705184"),
         ("Doktorvejen 2, 9940 Byrum", "5790001103460"),
         ("Østervej 13, 8592 Anholt", "5790000704842"),
     ])
