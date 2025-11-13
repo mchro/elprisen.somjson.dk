@@ -311,15 +311,24 @@ def route_gridcompanies():
     return jsonify(gridCompanies)
 
 def elafgift(year):
-    if year == 2025:
+    if year == 2026:
+        return 0.008
+    elif year == 2025:
         return 0.720
     elif year == 2024:
         return 0.761
 
 #https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/
 #TODO: get these from the API, or update for 2026
-energinet_nettarif = 0.061
-energinet_systemtarif = 0.074
+def energinet_nettarif(year):
+    if year == 2026:
+        return 0.043
+    return 0.061
+
+def energinet_systemtarif(year):
+    if year == 2026:
+        return 0.072
+    return 0.074
 
 moms = 1.25 #percentage
 
@@ -387,8 +396,8 @@ def elpris_detaljer():
             'SpotPrice': p['DayAheadPriceDKK'] / 1000.0, # MWh to KWh
 
             'ElAfgift': elafgift(hourstamp.year),
-            'EnergiNetNetTarif': energinet_nettarif,
-            'EnergiNetSystemTarif': energinet_systemtarif,
+            'EnergiNetNetTarif': energinet_nettarif(hourstamp.year),
+            'EnergiNetSystemTarif': energinet_systemtarif(hourstamp.year),
 
             'NetselskabTarif': tariffs['Price%d' % (hourstamp.hour % 24 + 1)],
 
@@ -442,8 +451,8 @@ def elpris():
             'SpotPrice': p['SpotPriceDKK'] / 1000.0, # MWh to KWh
 
             'ElAfgift': elafgift(hourstamp.year),
-            'EnergiNetNetTarif': energinet_nettarif,
-            'EnergiNetSystemTarif': energinet_systemtarif,
+            'EnergiNetNetTarif': energinet_nettarif(hourstamp.year),
+            'EnergiNetSystemTarif': energinet_systemtarif(hourstamp.year),
 
             'NetselskabTarif': tariffs['Price%d' % (hour % 24 + 1)],
 
