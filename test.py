@@ -22,7 +22,7 @@ class TestApp(unittest.TestCase):
         self.assertEqual(hour0['SpotPriceDKK'], 68.800003)
 
     def test_dayaheadprices_against_legacy(self):
-        startDate = app.date_from_reqparam("2025-09-19")
+        startDate = app.date_from_reqparam("2025-10-05")
         spotprices = app.get_spotprices_legacy(startDate, "DK1")
         dayaheadprices = app.get_spotprices_from_dayahead_prices(startDate, "DK1")
 
