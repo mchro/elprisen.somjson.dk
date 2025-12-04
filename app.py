@@ -10,17 +10,19 @@ from itertools import zip_longest
 from pprint import pprint
 from typing import Optional, TypedDict, List
 from functools import wraps
+from collections import OrderedDict
 import hashlib
 import pickle
 
-# Fallback cache storage for resilient API calls
-_fallback_cache = {}
+# Fallback cache storage for resilient API calls (LRU with max 100 items)
+_fallback_cache = OrderedDict()
+_FALLBACK_CACHE_MAX_SIZE = 100
 
 def fallback_to_cache(func):
     """
     Decorator that provides fallback to cached results when a function raises an exception.
 
-    When the decorated function succeeds, the result is stored in a fallback cache.
+    When the decorated function succeeds, the result is stored in a fallback cache (LRU, max 100 items).
     When it fails with any exception, the last successful result (if any) is returned instead.
     If no cached result exists, the exception is re-raised.
     """
@@ -38,13 +40,24 @@ def fallback_to_cache(func):
         try:
             # Try to execute the function
             result = func(*args, **kwargs)
-            # On success, store in fallback cache
+
+            # On success, store in fallback cache with LRU eviction
+            if cache_key_hash in _fallback_cache:
+                # Move existing item to end (mark as recently used)
+                _fallback_cache.move_to_end(cache_key_hash)
             _fallback_cache[cache_key_hash] = result
+
+            # Evict oldest item if cache exceeds max size
+            if len(_fallback_cache) > _FALLBACK_CACHE_MAX_SIZE:
+                _fallback_cache.popitem(last=False)  # Remove oldest (first) item
+
             return result
         except Exception as e:
             # On failure, check if we have a cached result
             if cache_key_hash in _fallback_cache:
                 print(f"Warning: {func.__name__} failed, returning cached result. Error: {e}")
+                # Move to end (mark as recently used)
+                _fallback_cache.move_to_end(cache_key_hash)
                 return _fallback_cache[cache_key_hash]
             else:
                 # No cached result available, re-raise the exception
