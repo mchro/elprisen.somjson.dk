@@ -1,10 +1,12 @@
 # test_app.py
 import unittest
+from unittest.mock import patch
 from parameterized import parameterized, parameterized_class
 import datetime
 from flask import Flask, jsonify
 import json
 from pprint import pprint
+import requests
 import app
 
 class TestApp(unittest.TestCase):
@@ -30,6 +32,41 @@ class TestApp(unittest.TestCase):
             self.assertEqual(sp['HourDK'], dah['HourDK'])
             self.assertEqual(sp['HourUTC'], dah['HourUTC'])
             self.assertEqual(sp['SpotPriceDKK'], dah['SpotPriceDKK'])
+
+    def test_fallback_cache_on_api_failure(self):
+        """Test that fallback cache returns cached data when API fails"""
+        startDate = app.date_from_reqparam("2025-10-05")
+
+        # First call - should succeed and populate the cache
+        dayaheadprices_success = app.get_dayahead_prices(startDate, "DK1")
+        self.assertIsNotNone(dayaheadprices_success)
+        self.assertIn('records', dayaheadprices_success)
+        self.assertGreater(len(dayaheadprices_success['records']), 0)
+
+        # Mock requests.get to simulate API failure
+        with patch('app.requests.get') as mock_get:
+            # Simulate HTTP error (e.g., 503 Service Unavailable)
+            mock_response = mock_get.return_value
+            mock_response.status_code = 503
+            mock_response.raise_for_status.side_effect = requests.HTTPError("503 Service Unavailable")
+
+            # Second call with same parameters - should return cached data instead of raising exception
+            dayaheadprices_cached = app.get_dayahead_prices(startDate, "DK1")
+
+            # Verify we got the cached result
+            self.assertIsNotNone(dayaheadprices_cached)
+            self.assertEqual(dayaheadprices_success, dayaheadprices_cached)
+
+        # Verify that without cache, the same mock would raise an exception
+        with patch('app.requests.get') as mock_get:
+            mock_response = mock_get.return_value
+            mock_response.status_code = 503
+            mock_response.raise_for_status.side_effect = requests.HTTPError("503 Service Unavailable")
+
+            # Different date should have no cache and should raise
+            different_date = app.date_from_reqparam("2025-11-05")
+            with self.assertRaises(requests.HTTPError):
+                app.get_dayahead_prices(different_date, "DK1")
 
     def test_co2emissions(self):
         startDate = app.date_from_reqparam("2024-02-23")

@@ -9,6 +9,48 @@ from dataclasses import dataclass
 from itertools import zip_longest
 from pprint import pprint
 from typing import Optional, TypedDict, List
+from functools import wraps
+import hashlib
+import pickle
+
+# Fallback cache storage for resilient API calls
+_fallback_cache = {}
+
+def fallback_to_cache(func):
+    """
+    Decorator that provides fallback to cached results when a function raises an exception.
+
+    When the decorated function succeeds, the result is stored in a fallback cache.
+    When it fails with any exception, the last successful result (if any) is returned instead.
+    If no cached result exists, the exception is re-raised.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # Create a cache key from function name and arguments
+        cache_key = (func.__name__, args, tuple(sorted(kwargs.items())))
+        # Use hash for large keys to avoid memory issues
+        try:
+            cache_key_hash = hashlib.md5(pickle.dumps(cache_key)).hexdigest()
+        except:
+            # Fallback to string representation if pickle fails
+            cache_key_hash = str(cache_key)
+
+        try:
+            # Try to execute the function
+            result = func(*args, **kwargs)
+            # On success, store in fallback cache
+            _fallback_cache[cache_key_hash] = result
+            return result
+        except Exception as e:
+            # On failure, check if we have a cached result
+            if cache_key_hash in _fallback_cache:
+                print(f"Warning: {func.__name__} failed, returning cached result. Error: {e}")
+                return _fallback_cache[cache_key_hash]
+            else:
+                # No cached result available, re-raise the exception
+                raise
+
+    return wrapper
 
 app = Flask(__name__)
 
@@ -24,6 +66,7 @@ cache = Cache(app)
 def maindoc():
     return render_template('main.html')
 
+@fallback_to_cache
 @cache.memoize(timeout=60)
 def get_spotprices_legacy(start, priceArea, end=None):
     params = {
@@ -35,11 +78,8 @@ def get_spotprices_legacy(start, priceArea, end=None):
         params['end'] = end.isoformat()
 
     response = requests.get('https://api.energidataservice.dk/dataset/elspotprices', params=params, verify="energidataservice.pem")
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print ("Error getting spotprices", response)
-        return None
+    response.raise_for_status()
+    return response.json()
 
 
 class DayAheadPriceRecord(TypedDict):
@@ -52,6 +92,7 @@ class DayAheadPricesResponse(TypedDict):
     """Represents the full response from the API."""
     records: List[DayAheadPriceRecord]
 
+@fallback_to_cache
 @cache.memoize(timeout=60)
 def get_dayahead_prices(start: datetime, priceArea: str, end: Optional[datetime] = None) -> Optional[DayAheadPricesResponse]:
     params = {
@@ -63,11 +104,8 @@ def get_dayahead_prices(start: datetime, priceArea: str, end: Optional[datetime]
         params['end'] = end.isoformat()
 
     response = requests.get('https://api.energidataservice.dk/dataset/DayAheadPrices', params=params, verify="energidataservice.pem")
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print ("Error getting spotprices", response)
-        return None
+    response.raise_for_status()
+    return response.json()
 
 
 def _convert_copenhagen_to_utc_hour(timestamp_str):
@@ -131,6 +169,7 @@ class CO2EmissionsResponse(TypedDict):
     """Represents the full response from the API."""
     records: List[DayAheadPriceRecord]
 
+@fallback_to_cache
 @cache.memoize(timeout=60)
 def get_co2emissions(start: datetime, priceArea: str, end: Optional[datetime] = None) -> Optional[CO2EmissionsResponse]:
     params = {
@@ -142,10 +181,8 @@ def get_co2emissions(start: datetime, priceArea: str, end: Optional[datetime] = 
         params['end'] = end.isoformat()
 
     response = requests.get('https://api.energidataservice.dk/dataset/CO2EmisProg', params=params, verify="energidataservice.pem")
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return None
+    response.raise_for_status()
+    return response.json()
 
 def hour_from_isotimestamp(ts):
     return ts[:len("YYYY-MM-DDTHH")]
@@ -218,6 +255,7 @@ def get_co2emissions_aligned_to_timeseries(start: datetime, priceArea: str, time
         'records': records,
         }
 
+@fallback_to_cache
 @cache.memoize(timeout=60*60)
 def get_tariffs(gln_Number, chargeTypeCode):
     params = {
@@ -226,10 +264,8 @@ def get_tariffs(gln_Number, chargeTypeCode):
         "limit": 0,
     }
     response = requests.get('https://api.energidataservice.dk/dataset/DatahubPriceList', params=params, verify="energidataservice.pem")
-    if response.status_code == 200:
-        return response.json()['records']
-    else:
-        return None
+    response.raise_for_status()
+    return response.json()['records']
 
 
 @cache.memoize(timeout=60)
@@ -332,14 +368,12 @@ def energinet_systemtarif(year):
 
 moms = 1.25 #percentage
 
+@fallback_to_cache
 @cache.memoize(timeout=60*60)
 def get_info_for_address(address):
     response = requests.get('https://api.elnet.greenpowerdenmark.dk/api/supplierlookup/' + address)
-
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return None
+    response.raise_for_status()
+    return response.json()
 
 @app.route('/adresse/<address>')
 def adresse(address):
@@ -383,7 +417,10 @@ def elpris_detaljer():
 
     dayaheadprices = get_dayahead_prices(startDate, priceArea, endDate)
     timestamps = list(map(lambda dah: datetime.fromisoformat(dah['TimeDK']), dayaheadprices['records']))
-    co2emissions = get_co2emissions_aligned_to_timeseries(startDate, priceArea, timestamps, endDate)
+    try:
+        co2emissions = get_co2emissions_aligned_to_timeseries(startDate, priceArea, timestamps, endDate)
+    except:
+        co2emissions = {'records': []}
 
     records = []
     for (p, emission) in zip_longest(dayaheadprices['records'], co2emissions['records']):
@@ -438,7 +475,10 @@ def elpris():
     else:
         spotprices = get_spotprices_legacy(startDate, priceArea, endDate)
 
-    co2emissions = get_co2emissions_avgperhour(startDate, priceArea, endDate)
+    try:
+        co2emissions = get_co2emissions_avgperhour(startDate, priceArea, endDate)
+    except:
+        co2emissions = {'records': []}
 
     records = []
     for (p, hour, emission) in zip_longest(spotprices['records'], range(len(spotprices['records'])), co2emissions['records']):
