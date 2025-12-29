@@ -118,7 +118,14 @@ def get_dayahead_prices(start: datetime, priceArea: str, end: Optional[datetime]
 
     response = requests.get('https://api.energidataservice.dk/dataset/DayAheadPrices', params=params, verify="energidataservice.pem")
     response.raise_for_status()
-    return response.json()
+
+    #Compensate for missing prices in DKK, if we have prices in EUR, since that is sometimes a failure mode of energidataservice
+    retval = response.json()
+    for x in retval['records']:
+        if not x['DayAheadPriceDKK'] and x['DayAheadPriceEUR']:
+            x['DayAheadPriceDKK'] = x['DayAheadPriceEUR'] * 7.46038
+
+    return retval
 
 
 def _convert_copenhagen_to_utc_hour(timestamp_str):
